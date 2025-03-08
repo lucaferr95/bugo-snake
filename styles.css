@@ -7,6 +7,23 @@ body {
   background-color: #f0f0f0;
 }
 
+h1 {
+  background-color: goldenrod;
+  font-size: 25px;
+  color: black;
+  text-align: center;
+}
+p {
+  background-color: goldenrod;
+  font-size: 15px;
+  color: rgb(245, 4, 4);
+  text-align: center;
+  font-weight: bold;
+}
 canvas {
   border: 1px solid black;
+}
+.text {
+  display: flex;
+  flex-direction: column;
 }

@@ -1,8 +1,8 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 800;
-canvas.height = 600;
-const gridSize = 60; // Dimensione della griglia
+canvas.width = 600; // Cambia larghezza della griglia a 600
+canvas.height = 600; // Assicura che altezza della griglia sia 600
+const gridSize = 60;
 
 const snake = [{ x: 2, y: 2 }];
 let direction = { x: 0, y: 0 };
@@ -11,29 +11,26 @@ let food = {
   y: Math.floor(Math.random() * (canvas.height / gridSize)),
 };
 let lastUpdate = 0;
-const updateInterval = 400; // Intervallo di aggiornamento in millisecondi
+const updateInterval = 400;
 let gameOver = false;
+let gameWon = false;
 
 let imagesLoaded = 0;
 let foodDrawn = false;
-let logsPrinted = false; // Variabile per tracciare se i log sono stati stampati
+let logsPrinted = false;
 
-// Carica l'immagine di background
 const backgroundImage = new Image();
 backgroundImage.src = "images/cell_gamesarena.jpg";
 backgroundImage.onload = () => imagesLoaded++;
 
-// Carica l'immagine del personaggio del serpente
 const playerImage = new Image();
 playerImage.src = "images/morgan_200x200.jpg";
 playerImage.onload = () => imagesLoaded++;
 
-// Carica l'immagine del personaggio del cibo
 const foodImage = new Image();
 foodImage.src = "images/bugo_2_100x100.jpg";
 foodImage.onload = () => imagesLoaded++;
 
-// Aggiungi un gestore di errori per verificare se l'immagine del cibo viene caricata correttamente
 foodImage.onerror = function () {
   console.error("Errore nel caricamento dell'immagine del cibo");
 };
@@ -42,16 +39,24 @@ function allImagesLoaded() {
   return imagesLoaded === 3;
 }
 
+function drawGrid() {
+  ctx.strokeStyle = "red";
+  for (let x = 0; x < canvas.width; x += gridSize) {
+    for (let y = 0; y < canvas.height; y += gridSize) {
+      ctx.strokeRect(x, y, gridSize, gridSize);
+    }
+  }
+}
+
 function draw() {
   if (!allImagesLoaded()) {
     requestAnimationFrame(draw);
     return;
   }
 
-  // Disegna l'immagine di background
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+  drawGrid();
 
-  // Disegna il serpente usando l'immagine del player
   for (let i = 0; i < snake.length; i++) {
     ctx.drawImage(
       playerImage,
@@ -62,7 +67,6 @@ function draw() {
     );
   }
 
-  // Disegna il cibo usando l'immagine del cibo
   if (foodImage.complete) {
     ctx.drawImage(
       foodImage,
@@ -83,7 +87,6 @@ function draw() {
     console.error("L'immagine del cibo non è ancora caricata.");
   }
 
-  // Se il gioco è finito, mostra il messaggio di Game Over
   if (gameOver) {
     ctx.fillStyle = "red";
     ctx.font = "48px Arial";
@@ -95,10 +98,42 @@ function draw() {
       canvas.height / 2 + 50
     );
   }
+
+  if (gameWon) {
+    ctx.fillStyle = "green";
+    ctx.font = "48px Arial";
+    ctx.fillText(
+      "LE BRUTTE INTENZIONI, LA MALEDUCAZIONE",
+      canvas.width / 2 - 200,
+      canvas.height / 2
+    );
+  }
+}
+
+function generateFood() {
+  let newFood;
+  let isOnSnake;
+
+  do {
+    isOnSnake = false;
+    newFood = {
+      x: Math.floor(Math.random() * (canvas.width / gridSize)),
+      y: Math.floor(Math.random() * (canvas.height / gridSize)),
+    };
+
+    for (let i = 0; i < snake.length; i++) {
+      if (snake[i].x === newFood.x && snake[i].y === newFood.y) {
+        isOnSnake = true;
+        break;
+      }
+    }
+  } while (isOnSnake);
+
+  return newFood;
 }
 
 function update(currentTime) {
-  if (currentTime - lastUpdate < updateInterval || gameOver) {
+  if (currentTime - lastUpdate < updateInterval || gameOver || gameWon) {
     requestAnimationFrame(update);
     return;
   }
@@ -106,11 +141,9 @@ function update(currentTime) {
 
   const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
 
-  // Gestisci la transizione da un bordo all'altro dello schermo
   head.x = (head.x + canvas.width / gridSize) % (canvas.width / gridSize);
   head.y = (head.y + canvas.height / gridSize) % (canvas.height / gridSize);
 
-  // Verifica se il serpente colpisce sé stesso
   for (let i = 1; i < snake.length; i++) {
     if (snake[i].x === head.x && snake[i].y === head.y) {
       gameOver = true;
@@ -118,26 +151,23 @@ function update(currentTime) {
     }
   }
 
-  // Verifica se il serpente mangia il cibo
-  if (Math.floor(head.x) === food.x && Math.floor(head.y) === food.y) {
-    // Genera nuovo cibo
-    food = {
-      x: Math.floor(Math.random() * (canvas.width / gridSize)),
-      y: Math.floor(Math.random() * (canvas.height / gridSize)),
-    };
+  if (head.x === food.x && head.y === food.y) {
+    food = generateFood();
     foodDrawn = false;
     logsPrinted = false;
     console.log("Serpente ha mangiato il cibo!");
   } else {
-    // Rimuovi la coda
     snake.pop();
   }
 
-  // Aggiungi una nuova testa al serpente
   snake.unshift(head);
   if (!logsPrinted) {
     console.log(`Testa del serpente a (${head.x}, ${head.y})`);
     logsPrinted = true;
+  }
+
+  if (snake.length >= 25) {
+    gameWon = true;
   }
 }
 
@@ -145,13 +175,11 @@ function resetGame() {
   snake.length = 0;
   snake.push({ x: 2, y: 2 });
   direction = { x: 0, y: 0 };
-  food = {
-    x: Math.floor(Math.random() * (canvas.width / gridSize)),
-    y: Math.floor(Math.random() * (canvas.height / gridSize)),
-  };
+  food = generateFood();
   foodDrawn = false;
   logsPrinted = false;
   gameOver = false;
+  gameWon = false;
 }
 
 function changeDirection(event) {
@@ -174,7 +202,7 @@ function changeDirection(event) {
     direction = { x: 0, y: -1 };
   } else if (keyPressed === DOWN && !goingUp) {
     direction = { x: 0, y: 1 };
-  } else if (keyPressed === ENTER && gameOver) {
+  } else if (keyPressed === ENTER && (gameOver || gameWon)) {
     resetGame();
   }
 }
@@ -185,8 +213,5 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Aggiungi l'ascoltatore di eventi per i tasti
 document.addEventListener("keydown", changeDirection);
-
-// Avvia il loop del gioco
 gameLoop();

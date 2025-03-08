@@ -1,20 +1,21 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 800; // Aumento della larghezza
-canvas.height = 600; // Aumento della altezza
-const gridSize = 40; // Dimensione della griglia
+canvas.width = 800;
+canvas.height = 600;
+const gridSize = 60; // Dimensione della griglia
 
-const snake = [{ x: 10, y: 10 }];
+const snake = [{ x: 2, y: 2 }];
 let direction = { x: 0, y: 0 };
 let food = {
   x: Math.floor(Math.random() * (canvas.width / gridSize)),
   y: Math.floor(Math.random() * (canvas.height / gridSize)),
 };
 let lastUpdate = 0;
-const updateInterval = 400; // Intervallo di aggiornamento in millisecondi (ad esempio, 100 ms)
+const updateInterval = 400; // Intervallo di aggiornamento in millisecondi
 
-let imagesLoaded = 0; // Variabile per tracciare il caricamento delle immagini
-let foodDrawn = false; // Variabile per tracciare se il cibo è stato disegnato
+let imagesLoaded = 0;
+let foodDrawn = false;
+let logsPrinted = false; // Variabile per tracciare se i log sono stati stampati
 
 // Carica l'immagine di background
 const backgroundImage = new Image();
@@ -69,6 +70,14 @@ function draw() {
       gridSize,
       gridSize
     );
+    if (!logsPrinted) {
+      console.log(
+        `Cibo disegnato a (${food.x}, ${food.y}) sulla griglia (${
+          food.x * gridSize
+        }, ${food.y * gridSize})`
+      );
+      logsPrinted = true;
+    }
   } else {
     console.error("L'immagine del cibo non è ancora caricata.");
   }
@@ -87,30 +96,39 @@ function update(currentTime) {
   head.x = (head.x + canvas.width / gridSize) % (canvas.width / gridSize);
   head.y = (head.y + canvas.height / gridSize) % (canvas.height / gridSize);
 
-  // Aggiungi una nuova testa al serpente
-  snake.unshift(head);
-
   // Verifica se il serpente mangia il cibo
-  if (head.x === food.x && head.y === food.y) {
+  if (Math.floor(head.x) === food.x && Math.floor(head.y) === food.y) {
     // Genera nuovo cibo
     food = {
       x: Math.floor(Math.random() * (canvas.width / gridSize)),
       y: Math.floor(Math.random() * (canvas.height / gridSize)),
     };
+    foodDrawn = false;
+    logsPrinted = false;
+    console.log("Serpente ha mangiato il cibo!");
   } else {
     // Rimuovi la coda
     snake.pop();
+  }
+
+  // Aggiungi una nuova testa al serpente
+  snake.unshift(head);
+  if (!logsPrinted) {
+    console.log(`Testa del serpente a (${head.x}, ${head.y})`);
+    logsPrinted = true;
   }
 }
 
 function resetGame() {
   snake.length = 0;
-  snake.push({ x: 10, y: 10 });
+  snake.push({ x: 2, y: 2 });
   direction = { x: 0, y: 0 };
   food = {
     x: Math.floor(Math.random() * (canvas.width / gridSize)),
     y: Math.floor(Math.random() * (canvas.height / gridSize)),
   };
+  foodDrawn = false;
+  logsPrinted = false; // Resetta logsPrinted quando il gioco viene resettato
 }
 
 function changeDirection(event) {

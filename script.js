@@ -12,6 +12,7 @@ let food = {
 };
 let lastUpdate = 0;
 const updateInterval = 400; // Intervallo di aggiornamento in millisecondi
+let gameOver = false;
 
 let imagesLoaded = 0;
 let foodDrawn = false;
@@ -81,10 +82,23 @@ function draw() {
   } else {
     console.error("L'immagine del cibo non è ancora caricata.");
   }
+
+  // Se il gioco è finito, mostra il messaggio di Game Over
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "48px Arial";
+    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    ctx.font = "24px Arial";
+    ctx.fillText(
+      "Premi Invio per ricominciare",
+      canvas.width / 2 - 150,
+      canvas.height / 2 + 50
+    );
+  }
 }
 
 function update(currentTime) {
-  if (currentTime - lastUpdate < updateInterval) {
+  if (currentTime - lastUpdate < updateInterval || gameOver) {
     requestAnimationFrame(update);
     return;
   }
@@ -95,6 +109,14 @@ function update(currentTime) {
   // Gestisci la transizione da un bordo all'altro dello schermo
   head.x = (head.x + canvas.width / gridSize) % (canvas.width / gridSize);
   head.y = (head.y + canvas.height / gridSize) % (canvas.height / gridSize);
+
+  // Verifica se il serpente colpisce sé stesso
+  for (let i = 1; i < snake.length; i++) {
+    if (snake[i].x === head.x && snake[i].y === head.y) {
+      gameOver = true;
+      return;
+    }
+  }
 
   // Verifica se il serpente mangia il cibo
   if (Math.floor(head.x) === food.x && Math.floor(head.y) === food.y) {
@@ -128,7 +150,8 @@ function resetGame() {
     y: Math.floor(Math.random() * (canvas.height / gridSize)),
   };
   foodDrawn = false;
-  logsPrinted = false; // Resetta logsPrinted quando il gioco viene resettato
+  logsPrinted = false;
+  gameOver = false;
 }
 
 function changeDirection(event) {
@@ -137,6 +160,7 @@ function changeDirection(event) {
   const UP = 38;
   const RIGHT = 39;
   const DOWN = 40;
+  const ENTER = 13;
   const goingUp = direction.y === -1;
   const goingDown = direction.y === 1;
   const goingRight = direction.x === 1;
@@ -150,6 +174,8 @@ function changeDirection(event) {
     direction = { x: 0, y: -1 };
   } else if (keyPressed === DOWN && !goingUp) {
     direction = { x: 0, y: 1 };
+  } else if (keyPressed === ENTER && gameOver) {
+    resetGame();
   }
 }
 

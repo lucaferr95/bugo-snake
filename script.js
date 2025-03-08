@@ -1,15 +1,12 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 600; // Cambia larghezza della griglia a 600
-canvas.height = 600; // Assicura che altezza della griglia sia 600
+canvas.width = 600;
+canvas.height = 600;
 const gridSize = 60;
 
 const snake = [{ x: 2, y: 2 }];
 let direction = { x: 0, y: 0 };
-let food = {
-  x: Math.floor(Math.random() * (canvas.width / gridSize)),
-  y: Math.floor(Math.random() * (canvas.height / gridSize)),
-};
+let food = generateFood();
 let lastUpdate = 0;
 const updateInterval = 400;
 let gameOver = false;
@@ -90,23 +87,19 @@ function draw() {
   if (gameOver) {
     ctx.fillStyle = "red";
     ctx.font = "48px Arial";
-    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    ctx.textAlign = "center";
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
     ctx.font = "24px Arial";
     ctx.fillText(
       "Premi Invio per ricominciare",
-      canvas.width / 2 - 150,
+      canvas.width / 2,
       canvas.height / 2 + 50
     );
   }
 
   if (gameWon) {
-    ctx.fillStyle = "green";
-    ctx.font = "48px Arial";
-    ctx.fillText(
-      "LE BRUTTE INTENZIONI, LA MALEDUCAZIONE",
-      canvas.width / 2 - 200,
-      canvas.height / 2
-    );
+    const winText = document.getElementById("winText");
+    winText.style.display = "block";
   }
 }
 
@@ -166,8 +159,10 @@ function update(currentTime) {
     logsPrinted = true;
   }
 
-  if (snake.length >= 25) {
+  if (snake.length >= 15) {
     gameWon = true;
+    const winText = document.getElementById("winText");
+    winText.style.display = "block";
   }
 }
 
@@ -180,6 +175,8 @@ function resetGame() {
   logsPrinted = false;
   gameOver = false;
   gameWon = false;
+  const winText = document.getElementById("winText");
+  winText.style.display = "none";
 }
 
 function changeDirection(event) {
